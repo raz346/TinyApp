@@ -8,8 +8,14 @@
   <h2> Loop </h2>
   <ul>
     <%  for ( let key in urls ) { %>
-      <li> <%= `${key}: ${urls[key]}` %></li>
+      <li>  <%= `${key} ---> ${urls[key]}` %>  
+        <form method="POST" action="/urls/<%= key %>/delete">
+        <label for="longURL"><button> DELETE </button> </label>
+        </form>
+    </li>
+
     <% } %>
     </ul>
+
 </body>
 </html>

@@ -9,9 +9,6 @@ let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-app.get("/", (req, res) => {
-  res.end("Hello");
-});
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -34,9 +31,6 @@ app.get("/urls/:id", (req, res) => {
   };
   res.render("urls_show", templateVars);
 })
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b>World</b></body></html>\n");
-});
 app.post("/urls", (req, res) => {
   function generateRandomString() {
     let length = 6;
@@ -50,12 +44,18 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect("/urls/"+ shortURL);
+  console.log("database",urlDatabase);
 });
+// Redirect Short URLs
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.originalUrl.substr(3);
-  console.log(shortURL);
   let longURL = urlDatabase[shortURL];
   res.redirect(longURL);
+});
+// handle delete request 
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id]g
+  res.redirect("/urls");
 });
 
 
