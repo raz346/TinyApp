@@ -3,11 +3,17 @@
 <head>
   <title>TinyApp</title>
 </head>
-<body>
+<body style="font-size:20px; padding:50px;">
+  <style>
+  h1 { margin :4%;}
+  </style>
   <% include ./partials/_header %> 
-  <h2> URL page for <%= shortURL %> </h2>
+  <h1> shortURL: <%= shortURL %> </h1> 
   <ul>
-    <li> <%=  shortURL %>  --->  <%= longURL %></li>
+    <form method="POST" action="/urls/<%= shortURL %>">
+      <input id="longURL" type="text"  name = "longURL" placeholder = <%= longURL %> style="width: 300px">
+      <input type="submit" value="Update">
+    </form>
   </ul>
 </body>
 </html>
