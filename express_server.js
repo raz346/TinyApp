@@ -7,10 +7,14 @@ let PORT = 8080;
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
-// pass the username form the cookies in the templates so they can
+// pass the user_id form the cookies in the templates so they can
 // be rendered in each ejs file
 app.use((req, res, next) => {
-  res.locals.username = req.cookies.username;
+  let userID = req.cookies["user_id"];
+  if (userID){
+    res.locals.user = users[userID];
+  }
+  else { res.locals.user = null;}
   next();
 });
 
@@ -18,6 +22,33 @@ let urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  },
+ "ahmed": {
+   id: "ahmed",
+   email: "adel_ahmed90@icloud.com",
+   password: "cats"
+ } 
+};
+// function to create random string
+function generateRandomString() {
+    let length = 6;
+    let char = "0123456789abcdefghijklmnopqrstuvwxyz";
+    let result = "";
+    for ( let i = length; i > 0; i--){
+      result += char[Math.floor(Math.random() * char.length)];
+    }
+    return result;
+  }
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -42,20 +73,11 @@ app.get("/urls/:id", (req, res) => {
   };
   res.render("urls_show", template);
 });
+
 app.post("/urls", (req, res) => {
-  function generateRandomString() {
-    let length = 6;
-    let char = "0123456789abcdefghijklmnopqrstuvwxyz";
-    let result = "";
-    for ( let i = length; i > 0; i--){
-      result += char[Math.floor(Math.random() * char.length)];
-    }
-    return result;
-  }
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect("/urls/" + shortURL);
-  console.log("database", urlDatabase);
 });
 // Redirect Short URLs
 app.get("/u/:shortURL", (req, res) => {
@@ -73,13 +95,52 @@ app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
   res.redirect("/urls/" + req.params.id);
 });
-// handle username submision and set cookies username
+app.get("/login", (req, res) => {
+  res.render("user_login")
+});
+// handle login submision and errors
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  let { email, password } = req.body;
+  for (let key in users ) {
+    if (email === users[key].email) {
+      if (password === users[key].password){
+        res.cookie("user_id",key);
+        res.redirect("/urls")
+        return
+      } else { 
+        res.status(403).send("Your password dosen't match")
+        return;
+      }
+    } 
+  }
+  res.status(403).send("Email is not registered"); 
 });
 // handle the logout and clear the cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/");
+  res.clearCookie("user_id");
+  res.redirect("/urls");
+});
+// hanlde requests for /register
+app.get("/register", (req, res) => {
+  res.render("user_register");
+});
+// handle registeration 
+app.post("/register", (req, res) => {
+  let id = generateRandomString();
+  let { email, password } = req.body;
+  if (email === "" || password === "") {
+      res.status(400).send("Please enter email and password");
+      return;
+  } else if (email) {
+    for (let key in users ){
+      if (email === users[key].email) {
+        res.status(400).send("Email is already registered ");
+        return
+      } 
+    }
+  }
+  users[id] = { id, email, password };
+  // console.log("users",users);
+  res.cookie("user_id", id);
+  res.redirect("/urls")
 });

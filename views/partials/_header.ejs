@@ -1,14 +1,12 @@
 <header>
-  <% if(username) { %>
-    <h2><%= username %></h2>
+  <% if(user) { %>
+    <h2><%= user["email"] %></h2>
     <form method="post" action="/logout">
       <button type="submit">Log out</button>
     </form>
   <% } else { %>
-  <form action="/login" method="POST" style="margin:150px;">
-    <label for="username">Username:</label>
-    <input id="username" type="text" name="username" value="<%= username %>" style="width: 300px">
-    <input type="submit" value="Submit">
-  </form>
+  <button> <a href="/login"> Login </a> </button>
+  <br>
+   <button><a href="/register"> register </a>  </button></br>
   <% } %>
 </header>
