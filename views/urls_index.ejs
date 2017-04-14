@@ -7,8 +7,8 @@
   <% include ./partials/_header %>
   <h2 style= " margin : 3%"> URLs index </h2>
   <ul>
-    <%  for ( let key in urls ) { %>
-    <li>  <%= `${key} ---> ${urls[key].long}` %>  
+    <%  for ( let key in userUrls ) { %>
+    <li>  <%= `${key} ---> ${userUrls[key].long}` %>  
       <form method="POST" action="/urls/<%= key %>/delete">
       <label for="long"> <a href="/urls/<%= key %>"> Edit </a> <button> DELETE </button> </label>
       </form>

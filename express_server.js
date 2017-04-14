@@ -18,7 +18,7 @@ app.use((req, res, next) => {
   next();
 });
 let urlDatabase = {
-  "b2xVn2": { long : "http://www.lighthouselabs.ca", userID :"ahmed"},
+  "b2xVn2": { long : "http://www.lighthouselabs.ca", userID :"b2xVn2"},
   "9sm5xK": { long : "http://www.google.com", userID :"user2RandomID"}
 };
 function UrlsToUsers(urlDatabase) {
@@ -39,8 +39,8 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   },
-  "ahmed": {
-    id: "ahmed",
+  "b2xVn2": {
+    id: "b2xVn2",
     email: "adel_ahmed90@icloud.com",
     password: "cats"
   }
@@ -64,9 +64,24 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
+// create a function to return data from database associated with userid
+function urlsForUser(id) {
+  let obj = {};
+  for (let key in urlDatabase) {
+    if (id === urlDatabase[key].userID) {
+      obj[key] = urlDatabase[key];
+    }
+  }
+  return  obj;
+}
 // Add a new route to urls_index to print the shorten and full url
 app.get("/urls", (req, res) => {
-  res.render("urls_index", { urls: urlDatabase });
+  let user_id = req.cookies["user_id"];
+ if (!user_id) {
+   res.status(401).render("401_errors");
+   return;
+ }
+  res.render("urls_index", { userUrls : urlsForUser(user_id)});
 });
 app.get("/urls/new", (req, res) => {
   if(req.cookies["user_id"]) {
@@ -86,6 +101,7 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = { long : req.body.longURL, userID : req.cookies["user_id"] };
   res.redirect("/urls/" + shortURL);
+  console.log("urlsdatabase",urlDatabase);
 });
 // redirect the user to the full url page
 app.get("/u/:shortURL", (req, res) => {
@@ -154,4 +170,6 @@ app.post("/register", (req, res) => {
   users[id] = { id, email, password };
   res.cookie("user_id", id);
   res.redirect("/urls");
+  console.log("userdatabase", users);
 });
+
