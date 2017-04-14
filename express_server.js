@@ -11,44 +11,50 @@ app.use(cookieParser());
 // be rendered in each ejs file
 app.use((req, res, next) => {
   let userID = req.cookies["user_id"];
-  if (userID){
+  if (userID) {
     res.locals.user = users[userID];
   }
-  else { res.locals.user = null;}
+  else { res.locals.user = null; }
   next();
 });
-
 let urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { long : "http://www.lighthouselabs.ca", userID :"ahmed"},
+  "9sm5xK": { long : "http://www.google.com", userID :"user2RandomID"}
 };
-const users = { 
+function UrlsToUsers(urlDatabase) {
+  for ( let key in urlDatabase) {
+    if (req.cookies["user_id"] === urlDatabase[key].id) {
+      return urlDatabase[key];
+    } else { return false; }
+  }
+}
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   },
- "ahmed": {
-   id: "ahmed",
-   email: "adel_ahmed90@icloud.com",
-   password: "cats"
- } 
+  "ahmed": {
+    id: "ahmed",
+    email: "adel_ahmed90@icloud.com",
+    password: "cats"
+  }
 };
 // function to create random string
 function generateRandomString() {
-    let length = 6;
-    let char = "0123456789abcdefghijklmnopqrstuvwxyz";
-    let result = "";
-    for ( let i = length; i > 0; i--){
-      result += char[Math.floor(Math.random() * char.length)];
-    }
-    return result;
+  let length = 6;
+  let char = "0123456789abcdefghijklmnopqrstuvwxyz";
+  let result = "";
+  for ( let i = length; i > 0; i--){
+    result += char[Math.floor(Math.random() * char.length)];
   }
+  return result;
+}
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -63,40 +69,46 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", { urls: urlDatabase });
 });
 app.get("/urls/new", (req, res) => {
+  if(req.cookies["user_id"]) {
   res.render("urls_new");
+} else { res.redirect("/login");}
 });
 // Add a new route to urls_show to print each urls based on given id
 app.get("/urls/:id", (req, res) => {
   let template = {
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    longURL: urlDatabase[req.params.id].long
   };
   res.render("urls_show", template);
 });
-
+// handle generating new short urls 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = { long : req.body.longURL, userID : req.cookies["user_id"] };
   res.redirect("/urls/" + shortURL);
 });
-// Redirect Short URLs
+// redirect the user to the full url page
 app.get("/u/:shortURL", (req, res) => {
   let shortURL = req.originalUrl.substr(3);
-  let longURL = urlDatabase[shortURL];
+  let longURL = urlDatabase[shortURL].long;
   res.redirect(longURL);
 });
 // handle delete request
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  if ( req.cookies["user_id"] === urlDatabase[req.params.id].userID ) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  } else { res.status(400).send("You can't delete other users urls"); }
 });
 // handle update requests
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect("/urls/" + req.params.id);
+  if ( req.cookies["user_id"] === urlDatabase[req.params.id].userID ) {
+    urlDatabase[req.params.id].long = req.body.longURL;
+    res.redirect("/urls/");
+  } else { res.status(400).send("You can't update other users urls");}
 });
 app.get("/login", (req, res) => {
-  res.render("user_login")
+  res.render("user_login");
 });
 // handle login submision and errors
 app.post("/login", (req, res) => {
@@ -104,16 +116,16 @@ app.post("/login", (req, res) => {
   for (let key in users ) {
     if (email === users[key].email) {
       if (password === users[key].password){
-        res.cookie("user_id",key);
-        res.redirect("/urls")
-        return
-      } else { 
-        res.status(403).send("Your password dosen't match")
+        res.cookie("user_id", key);
+        res.redirect("/urls");
+        return;
+      } else {
+        res.status(403).send("Your password dosen't match");
         return;
       }
-    } 
+    }
   }
-  res.status(403).send("Email is not registered"); 
+  res.status(403).send("Email is not registered");
 });
 // handle the logout and clear the cookies
 app.post("/logout", (req, res) => {
@@ -124,23 +136,22 @@ app.post("/logout", (req, res) => {
 app.get("/register", (req, res) => {
   res.render("user_register");
 });
-// handle registeration 
+// handle registeration
 app.post("/register", (req, res) => {
   let id = generateRandomString();
   let { email, password } = req.body;
   if (email === "" || password === "") {
-      res.status(400).send("Please enter email and password");
-      return;
+    res.status(400).send("Please enter email and password");
+    return;
   } else if (email) {
     for (let key in users ){
       if (email === users[key].email) {
         res.status(400).send("Email is already registered ");
-        return
-      } 
+        return;
+      }
     }
   }
   users[id] = { id, email, password };
-  // console.log("users",users);
   res.cookie("user_id", id);
-  res.redirect("/urls")
+  res.redirect("/urls");
 });

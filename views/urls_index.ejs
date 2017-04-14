@@ -8,9 +8,9 @@
   <h2 style= " margin : 3%"> URLs index </h2>
   <ul>
     <%  for ( let key in urls ) { %>
-    <li>  <%= `${key} ---> ${urls[key]}` %>  
+    <li>  <%= `${key} ---> ${urls[key].long}` %>  
       <form method="POST" action="/urls/<%= key %>/delete">
-      <label for="longURL"> <a href="/urls/<%= key %>"> Edit </a> <button> DELETE </button> </label>
+      <label for="long"> <a href="/urls/<%= key %>"> Edit </a> <button> DELETE </button> </label>
       </form>
     </li>
     <% } %>
