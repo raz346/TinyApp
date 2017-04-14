@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 let app = express();
 // default port is 8080
 let PORT = 8080;
@@ -32,17 +33,17 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    hashed_password: "purple-monkey-dinosaur"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    hashed_password: "dishwasher-funk"
   },
   "b2xVn2": {
     id: "b2xVn2",
     email: "adel_ahmed90@icloud.com",
-    password: "cats"
+    hashed_password: "cats"
   }
 };
 // function to create random string
@@ -74,7 +75,7 @@ function urlsForUser(id) {
   }
   return  obj;
 }
-// Add a new route to urls_index to print the shorten and full url
+// Add a new route to urls_index to print the shorten and full url and check if there is a user logged in 
 app.get("/urls", (req, res) => {
   let user_id = req.cookies["user_id"];
  if (!user_id) {
@@ -131,7 +132,7 @@ app.post("/login", (req, res) => {
   let { email, password } = req.body;
   for (let key in users ) {
     if (email === users[key].email) {
-      if (password === users[key].password){
+      if (bcrypt.compareSync(password, users[key].hashed_password)){
         res.cookie("user_id", key);
         res.redirect("/urls");
         return;
@@ -155,8 +156,10 @@ app.get("/register", (req, res) => {
 // handle registeration
 app.post("/register", (req, res) => {
   let id = generateRandomString();
-  let { email, password } = req.body;
-  if (email === "" || password === "") {
+  let  email = req.body.email;
+  let password = req.body.password;
+  let hashed_password = bcrypt.hashSync(password, 10);
+  if (email === "" || hashed_password === "") {
     res.status(400).send("Please enter email and password");
     return;
   } else if (email) {
@@ -167,7 +170,8 @@ app.post("/register", (req, res) => {
       }
     }
   }
-  users[id] = { id, email, password };
+  users[id] = { id, email, hashed_password };
+  console.log("userid",users[id]);
   res.cookie("user_id", id);
   res.redirect("/urls");
   console.log("userdatabase", users);
